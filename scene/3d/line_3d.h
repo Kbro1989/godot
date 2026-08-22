@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  app.swift                                                             */
+/*  line_3d.h                                                             */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,31 +28,39 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-import SwiftUI
-import UIKit
+#pragma once
 
-struct GodotSwiftUIViewController: UIViewControllerRepresentable {
+#include "scene/3d/visual_instance_3d.h"
 
-	func makeUIViewController(context: Context) -> GDTViewController {
-		let viewController = GDTViewController()
-		GDTAppDelegateService.viewController = viewController
-		return viewController
-	}
+class Line3D : public GeometryInstance3D {
+	GDCLASS(Line3D, GeometryInstance3D);
 
-	func updateUIViewController(_ uiViewController: GDTViewController, context: Context) {
-		// NOOP
-	}
+protected:
+	static void _bind_methods();
 
-}
+public:
+	enum MeshAlignment {
+		MESH_ALIGNMENT_LOCAL,
+		MESH_ALIGNMENT_BILLBOARD,
+		MESH_ALIGNMENT_MAX,
+	};
 
-@main
-struct SwiftUIApp: App {
-	@UIApplicationDelegateAdaptor(GDTApplicationDelegate.self) var appDelegate
+	enum TilingMode {
+		TILING_MODE_UNIT,
+		TILING_MODE_LENGTH,
+		TILING_MAX,
+	};
 
-	var body: some Scene {
-		WindowGroup {
-			GodotSwiftUIViewController()
-				.ignoresSafeArea()
-		}
-	}
-}
+	enum MaterialMode {
+		MATERIAL_MODE_MIX,
+		MATERIAL_MODE_ADD,
+		MATERIAL_MODE_CUSTOM,
+		MATERIAL_MODE_MAX,
+	};
+
+	PackedStringArray get_configuration_warnings() const override;
+};
+
+VARIANT_ENUM_CAST(Line3D::TilingMode)
+VARIANT_ENUM_CAST(Line3D::MeshAlignment)
+VARIANT_ENUM_CAST(Line3D::MaterialMode)

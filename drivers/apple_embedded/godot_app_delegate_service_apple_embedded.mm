@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  app_delegate_service.mm                                               */
+/*  godot_app_delegate_service_apple_embedded.mm                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,7 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#import "app_delegate_service.h"
+#import "godot_app_delegate_service_apple_embedded.h"
 
 #include "core/config/project_settings.h"
 #include "core/os/main_loop.h"
@@ -59,14 +59,14 @@ enum {
 	SESSION_CATEGORY_SOLO_AMBIENT
 };
 
-static GDTViewController *mainViewController = nil;
+static __weak GDTViewController *_viewController = nil;
 
 + (GDTViewController *)viewController {
-	return mainViewController;
+	return _viewController;
 }
 
 + (void)setViewController:(GDTViewController *)viewController {
-	mainViewController = viewController;
+	_viewController = viewController;
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
@@ -131,10 +131,10 @@ static GDTViewController *mainViewController = nil;
 	if ([notification.name isEqualToString:AVAudioSessionInterruptionNotification]) {
 		if ([[notification.userInfo valueForKey:AVAudioSessionInterruptionTypeKey] isEqualToNumber:[NSNumber numberWithInt:AVAudioSessionInterruptionTypeBegan]]) {
 			NSLog(@"Audio interruption began");
-			OS_AppleEmbedded::get_singleton()->on_focus_out();
+			OS_AppleEmbedded::get_singleton()->audio_driver_stop();
 		} else if ([[notification.userInfo valueForKey:AVAudioSessionInterruptionTypeKey] isEqualToNumber:[NSNumber numberWithInt:AVAudioSessionInterruptionTypeEnded]]) {
 			NSLog(@"Audio interruption ended");
-			OS_AppleEmbedded::get_singleton()->on_focus_in();
+			OS_AppleEmbedded::get_singleton()->audio_driver_start();
 		}
 	}
 }
@@ -163,36 +163,38 @@ static GDTViewController *mainViewController = nil;
 	OS_AppleEmbedded::get_singleton()->on_focus_out();
 }
 
-- (void)sceneWillResignActive:(UIScene *)scene API_AVAILABLE(ios(13.0), tvos(13.0), visionos(1.0)) {
-	OS_AppleEmbedded::get_singleton()->on_focus_out();
+- (void)sceneWillEnterForeground:(UIScene *)scene API_AVAILABLE(ios(13.0), tvos(13.0), visionos(1.0)) {
+	// This method is not called on visionOS Compositor Services Immersive Scenes due to a pre-existing issue.
+	OS_AppleEmbedded::get_singleton()->on_exit_background();
 }
 
 - (void)sceneDidBecomeActive:(UIScene *)scene API_AVAILABLE(ios(13.0), tvos(13.0), visionos(1.0)) {
 	OS_AppleEmbedded::get_singleton()->on_focus_in();
 }
 
+- (void)sceneWillResignActive:(UIScene *)scene API_AVAILABLE(ios(13.0), tvos(13.0), visionos(1.0)) {
+	// This method is not called on visionOS Compositor Services Immersive Scenes due to a pre-existing issue.
+	OS_AppleEmbedded::get_singleton()->on_focus_out();
+}
+
 - (void)sceneDidEnterBackground:(UIScene *)scene API_AVAILABLE(ios(13.0), tvos(13.0), visionos(1.0)) {
 	OS_AppleEmbedded::get_singleton()->on_enter_background();
 }
 
-- (void)sceneWillEnterForeground:(UIScene *)scene API_AVAILABLE(ios(13.0), tvos(13.0), visionos(1.0)) {
+- (void)applicationWillEnterForeground:(UIApplication *)application {
 	OS_AppleEmbedded::get_singleton()->on_exit_background();
-}
-
-- (void)applicationWillResignActive:(UIApplication *)application {
-	OS_AppleEmbedded::get_singleton()->on_focus_out();
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
 	OS_AppleEmbedded::get_singleton()->on_focus_in();
 }
 
-- (void)applicationDidEnterBackground:(UIApplication *)application {
-	OS_AppleEmbedded::get_singleton()->on_enter_background();
+- (void)applicationWillResignActive:(UIApplication *)application {
+	OS_AppleEmbedded::get_singleton()->on_focus_out();
 }
 
-- (void)applicationWillEnterForeground:(UIApplication *)application {
-	OS_AppleEmbedded::get_singleton()->on_exit_background();
+- (void)applicationDidEnterBackground:(UIApplication *)application {
+	OS_AppleEmbedded::get_singleton()->on_enter_background();
 }
 
 - (void)dealloc {
