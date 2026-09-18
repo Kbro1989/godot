@@ -1177,8 +1177,8 @@ void AnimationNodeBlendSpace2DEditor::_inline_editor_text_changed(const String &
 		return;
 	}
 
-	Vector2 editor_size = inline_editor->get_size();
-	inline_editor->set_size(Vector2(0, editor_size.y));
+	inline_editor->set_size(Vector2(0, inline_editor->get_size().y));
+	Vector2 editor_size = inline_editor->get_minimum_size();
 
 	const float pm = POINT_MARGIN * EDSCALE;
 	const Size2 s = blend_space_draw->get_size() - Vector2(pm * 2, pm * 2);
@@ -1312,12 +1312,13 @@ AnimationNodeBlendSpace2DEditor::AnimationNodeBlendSpace2DEditor() {
 	top_hf->add_child(interpolation);
 	interpolation->connect(SceneStringName(item_selected), callable_mp(this, &AnimationNodeBlendSpace2DEditor::_config_changed));
 
+	edit_hb = memnew(HBoxContainer);
+	edit_hb->set_h_size_flags(SIZE_EXPAND_FILL);
+	top_hf->add_child(edit_hb);
+
 	Control *top_spacer = memnew(Control);
 	top_spacer->set_h_size_flags(SIZE_EXPAND_FILL);
-	top_hf->add_child(top_spacer);
-
-	edit_hb = memnew(HBoxContainer);
-	top_hf->add_child(edit_hb);
+	edit_hb->add_child(top_spacer);
 
 	open_editor = memnew(Button);
 	edit_hb->add_child(open_editor);
